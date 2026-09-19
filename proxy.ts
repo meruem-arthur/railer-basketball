@@ -3,7 +3,9 @@ import { authConfigEdge } from "@/lib/auth/config.edge";
 
 // Edge-safe proxy auth check — uses the provider-less config so
 // nothing here ever touches Prisma or bcrypt.
-export const { auth: proxy } = NextAuth(authConfigEdge);
+const { auth } = NextAuth(authConfigEdge);
+
+export default auth;
 
 export const config = {
   // Run on everything except static assets.
