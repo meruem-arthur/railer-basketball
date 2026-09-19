@@ -44,7 +44,12 @@ export async function getTryoutCounts(): Promise<{
     _count: { _all: true },
   });
 
-  const counts: Record<string, number> = {
+  // Not typed as Record<string, number> — leaving it as an inferred
+  // literal keeps PENDING/SHORTLISTED/etc. as known keys through the
+  // spread below. Widening to Record<string, number> here made the
+  // spread collapse to a bare index signature, which no longer
+  // satisfied this function's explicit return type.
+  const counts = {
     PENDING: 0,
     SHORTLISTED: 0,
     APPROVED: 0,
