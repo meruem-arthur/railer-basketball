@@ -1,5 +1,5 @@
 import "server-only";
-import * as brevo from "@getbrevo/brevo";
+import { BrevoClient } from "@getbrevo/brevo";
 
 const apiKey = process.env.BREVO_API_KEY;
 const senderEmail = process.env.BREVO_SENDER_EMAIL;
@@ -7,14 +7,16 @@ const senderName = process.env.BREVO_SENDER_NAME ?? "UMaT SRID Railers";
 
 export const isEmailConfigured = Boolean(apiKey && senderEmail);
 
-let apiInstance: brevo.TransactionalEmailsApi | null = null;
+// @getbrevo/brevo v6 replaced the old TransactionalEmailsApi/SendSmtpEmail
+// class-based SDK with a single BrevoClient exposing namespaced methods.
+// See https://developers.brevo.com/guides/node-js
+let client: BrevoClient | null = null;
 
-function getClient(): brevo.TransactionalEmailsApi {
-  if (!apiInstance) {
-    apiInstance = new brevo.TransactionalEmailsApi();
-    apiInstance.setApiKey(brevo.TransactionalEmailsApiApiKeys.apiKey, apiKey as string);
+function getClient(): BrevoClient {
+  if (!client) {
+    client = new BrevoClient({ apiKey: apiKey as string });
   }
-  return apiInstance;
+  return client;
 }
 
 export class EmailConfigError extends Error {
@@ -35,13 +37,12 @@ interface SendEmailArgs {
 async function sendEmail({ to, subject, htmlContent }: SendEmailArgs): Promise<void> {
   if (!isEmailConfigured) throw new EmailConfigError();
 
-  const message = new brevo.SendSmtpEmail();
-  message.sender = { email: senderEmail as string, name: senderName };
-  message.to = to;
-  message.subject = subject;
-  message.htmlContent = htmlContent;
-
-  await getClient().sendTransacEmail(message);
+  await getClient().transactionalEmails.sendTransacEmail({
+    sender: { email: senderEmail as string, name: senderName },
+    to,
+    subject,
+    htmlContent,
+  });
 }
 
 export async function sendPasswordResetEmail(params: {
