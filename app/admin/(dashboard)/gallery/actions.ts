@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db/prisma";
+import type { Prisma } from "@prisma/client";
 import { requireRole, requireUser } from "@/lib/auth/session";
 import { galleryAlbumSchema, galleryImageSchema } from "@/lib/validation/misc";
 import { slugifyAlbumTitle } from "@/lib/services/gallery";
@@ -46,9 +47,12 @@ export async function createAlbumAction(
     return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid input." };
   }
 
-  const album = await prisma.galleryAlbum.create({
-    data: { ...parsed.data, createdById: user.id },
-  });
+  const data: Prisma.GalleryAlbumUncheckedCreateInput = {
+    ...parsed.data,
+    createdById: user.id,
+  };
+
+  const album = await prisma.galleryAlbum.create({ data });
 
   await logAction({ userId: user.id, action: "GALLERY_ALBUM_CREATED", entity: "GalleryAlbum", entityId: album.id });
   revalidatePath("/admin/gallery");

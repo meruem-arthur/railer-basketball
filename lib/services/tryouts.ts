@@ -31,7 +31,14 @@ export async function getTryoutApplications(filters: TryoutFilters = {}) {
   return { items, total, page, pageSize, totalPages: Math.max(1, Math.ceil(total / pageSize)) };
 }
 
-export async function getTryoutCounts() {
+export async function getTryoutCounts(): Promise<{
+  total: number;
+  PENDING: number;
+  SHORTLISTED: number;
+  APPROVED: number;
+  REJECTED: number;
+  CONTACTED: number;
+}> {
   const grouped = await prisma.tryoutApplication.groupBy({
     by: ["status"],
     _count: { _all: true },
