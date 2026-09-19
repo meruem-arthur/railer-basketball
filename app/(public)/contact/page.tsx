@@ -1,19 +1,12 @@
 import type { Metadata } from "next";
-import { Mail, Phone, MapPin, Instagram, Facebook, Youtube, Twitter } from "lucide-react";
+import { Mail, Phone, MapPin } from "lucide-react";
 import { getSiteSettings, getActiveSocialLinks } from "@/lib/services/settings";
 import { ContactForm } from "@/components/contact/contact-form";
+import { SOCIAL_ICONS } from "@/components/icons/social";
 
 export const metadata: Metadata = {
   title: "Contact",
   description: "Get in touch with UMaT SRID Railers.",
-};
-
-const SOCIAL_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
-  instagram: Instagram,
-  facebook: Facebook,
-  youtube: Youtube,
-  x: Twitter,
-  twitter: Twitter,
 };
 
 export default async function ContactPage() {
