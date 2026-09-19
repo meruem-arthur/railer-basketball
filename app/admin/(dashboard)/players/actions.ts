@@ -6,6 +6,9 @@ import { requireRole } from "@/lib/auth/session";
 import { playerSchema, playerSeasonSchema } from "@/lib/validation/player";
 import { logAction } from "@/lib/services/audit";
 import { slugify, slugExists } from "@/lib/services/players";
+import { recomputeTeamGameStats } from "@/lib/services/stats";
+import { deleteImage } from "@/lib/cloudinary/upload";
+import type { DeleteResult } from "@/lib/utils/action-result";
 
 export interface PlayerFormState {
   success: boolean;
@@ -139,6 +142,75 @@ export async function deactivatePlayerAction(playerId: string) {
   await logAction({ userId: user.id, action: "PLAYER_DEACTIVATED", entity: "Player", entityId: playerId });
   revalidatePath("/admin/players");
   revalidatePath("/team");
+}
+
+/**
+ * Permanently deletes a player. Their season entries and every box-score
+ * line recorded for them go with them (database cascade); any game that
+ * named them MVP loses that MVP, and team totals for the affected games
+ * are recalculated from the remaining stats.
+ */
+export async function deletePlayerAction(playerId: string): Promise<DeleteResult> {
+  const user = await requireRole(["SUPER_ADMIN", "ADMIN"]);
+
+  const player = await prisma.player.findUnique({
+    where: { id: playerId },
+    select: {
+      slug: true,
+      firstName: true,
+      lastName: true,
+      photoPublicId: true,
+      seasons: { select: { id: true, gameStats: { select: { gameId: true } } } },
+    },
+  });
+  if (!player) return { success: false, error: "This player no longer exists." };
+
+  const playerSeasonIds = player.seasons.map((ps) => ps.id);
+  const affectedGameIds = [
+    ...new Set(player.seasons.flatMap((ps) => ps.gameStats.map((gs) => gs.gameId))),
+  ];
+
+  try {
+    await prisma.$transaction(
+      async (tx) => {
+        if (playerSeasonIds.length > 0) {
+          // mvpPlayerSeasonId is a plain column, not a foreign key, so it
+          // would otherwise be left pointing at a row that no longer exists.
+          await tx.game.updateMany({
+            where: { mvpPlayerSeasonId: { in: playerSeasonIds } },
+            data: { mvpPlayerSeasonId: null },
+          });
+        }
+        await tx.player.delete({ where: { id: playerId } });
+        await recomputeTeamGameStats(tx, affectedGameIds);
+      },
+      { timeout: 20_000 }
+    );
+  } catch {
+    return { success: false, error: "Could not delete this player. Please try again." };
+  }
+
+  // Best-effort cleanup of the uploaded photo; the player is already gone.
+  if (player.photoPublicId) await deleteImage(player.photoPublicId).catch(() => {});
+
+  await logAction({
+    userId: user.id,
+    action: "PLAYER_DELETED",
+    entity: "Player",
+    entityId: playerId,
+    metadata: { name: `${player.firstName} ${player.lastName}` },
+  });
+
+  // Deliberately not revalidating /admin/players/[id]: that page is the one
+  // being deleted, and re-rendering it here would 404 before the redirect.
+  revalidatePath("/admin/players");
+  revalidatePath("/team");
+  revalidatePath(`/team/${player.slug}`);
+  revalidatePath("/stats");
+  revalidatePath("/results");
+  revalidatePath("/");
+
+  return { success: true };
 }
 
 export async function reactivatePlayerAction(playerId: string) {

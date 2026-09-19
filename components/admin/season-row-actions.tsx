@@ -3,21 +3,28 @@
 import { useTransition } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { setCurrentSeasonAction, archiveSeasonAction } from "@/app/admin/(dashboard)/seasons/actions";
+import {
+  setCurrentSeasonAction,
+  archiveSeasonAction,
+  deleteSeasonAction,
+} from "@/app/admin/(dashboard)/seasons/actions";
+import { ConfirmDeleteButton } from "@/components/admin/confirm-delete-button";
 
 export function SeasonRowActions({
   seasonId,
+  label,
   isCurrent,
   isArchived,
 }: {
   seasonId: string;
+  label: string;
   isCurrent: boolean;
   isArchived: boolean;
 }) {
   const [isPending, startTransition] = useTransition();
 
   return (
-    <div className="flex gap-2">
+    <div className="flex flex-wrap gap-2">
       {!isCurrent && (
         <Button
           size="sm"
@@ -48,6 +55,28 @@ export function SeasonRowActions({
           Archive
         </Button>
       )}
+      <ConfirmDeleteButton
+        action={() => deleteSeasonAction(seasonId)}
+        title="Delete season?"
+        description={
+          <>
+            <p>
+              <span className="text-rail-white">{label}</span> will be removed for good, together with
+              all of its games, results, box scores and team stats, and every player&apos;s roster
+              entry for that season. The players themselves are kept.
+            </p>
+            {isCurrent && (
+              <p>
+                This is the current season, so the site will have no current season until you set
+                another one.
+              </p>
+            )}
+            {!isArchived && !isCurrent && <p>If you just want it out of the way, Archive keeps its history.</p>}
+          </>
+        }
+        successMessage="Season deleted."
+        confirmText={label}
+      />
     </div>
   );
 }

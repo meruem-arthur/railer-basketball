@@ -5,6 +5,7 @@ import { prisma } from "@/lib/db/prisma";
 import { requireRole } from "@/lib/auth/session";
 import { gameSchema, resultSchema } from "@/lib/validation/game";
 import { logAction } from "@/lib/services/audit";
+import type { DeleteResult } from "@/lib/utils/action-result";
 
 export interface GameFormState {
   success: boolean;
@@ -75,6 +76,46 @@ export async function cancelGameAction(gameId: string) {
   await logAction({ userId: user.id, action: "GAME_CANCELLED", entity: "Game", entityId: gameId });
   revalidatePath("/admin/games");
   revalidatePath("/schedule");
+}
+
+/**
+ * Permanently deletes a game along with its result: quarter scores, every
+ * player's box-score line, and the team totals (database cascade). Gallery
+ * albums that were linked to it are kept, just unlinked.
+ */
+export async function deleteGameAction(gameId: string): Promise<DeleteResult> {
+  const user = await requireRole(["SUPER_ADMIN", "ADMIN"]);
+
+  const game = await prisma.game.findUnique({
+    where: { id: gameId },
+    select: { opponentName: true },
+  });
+  if (!game) return { success: false, error: "This game no longer exists." };
+
+  try {
+    await prisma.game.delete({ where: { id: gameId } });
+  } catch {
+    return { success: false, error: "Could not delete this game. Please try again." };
+  }
+
+  await logAction({
+    userId: user.id,
+    action: "GAME_DELETED",
+    entity: "Game",
+    entityId: gameId,
+    metadata: { opponent: game.opponentName },
+  });
+
+  // Not revalidating /admin/games/[id] — that page is the one being deleted.
+  revalidatePath("/admin/games");
+  revalidatePath("/schedule");
+  revalidatePath("/results");
+  revalidatePath("/stats");
+  revalidatePath(`/games/${gameId}`);
+  revalidatePath("/gallery");
+  revalidatePath("/");
+
+  return { success: true };
 }
 
 export async function postponeGameAction(gameId: string) {

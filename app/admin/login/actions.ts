@@ -11,31 +11,37 @@ import bcrypt from "bcryptjs";
 
 export interface LoginState {
   error?: string;
+  success?: boolean;
+  /** Echoed back on failure so the email field isn't wiped by the form reset. */
+  email?: string;
 }
 
 export async function loginAction(_prev: LoginState, formData: FormData): Promise<LoginState> {
+  const email = String(formData.get("email") ?? "");
+
   const parsed = loginSchema.safeParse({
     email: formData.get("email"),
     password: formData.get("password"),
   });
 
   if (!parsed.success) {
-    return { error: "Enter a valid email and password." };
+    return { error: "Enter a valid email and password.", email };
   }
 
   try {
+    // redirect: false — the client shows a "Login successful" message and
+    // then navigates to /admin itself. Bad credentials still throw an
+    // AuthError (Auth.js raw mode), which is handled below.
     await signIn("credentials", {
       email: parsed.data.email,
       password: parsed.data.password,
-      redirectTo: "/admin",
+      redirect: false,
     });
-    return {};
+    return { success: true };
   } catch (err) {
     if (err instanceof AuthError) {
-      return { error: "Invalid email or password." };
+      return { error: "Invalid email or password.", email };
     }
-    // NextAuth signals a successful sign-in via a thrown redirect — rethrow
-    // anything that isn't an AuthError so that redirect actually happens.
     throw err;
   }
 }

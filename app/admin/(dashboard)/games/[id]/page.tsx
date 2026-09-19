@@ -8,8 +8,10 @@ import {
   updateGameAction,
   cancelGameAction,
   postponeGameAction,
+  deleteGameAction,
 } from "@/app/admin/(dashboard)/games/actions";
 import { Button } from "@/components/ui/button";
+import { ConfirmDeleteButton } from "@/components/admin/confirm-delete-button";
 import { GameStatusBadge } from "@/components/ui/badge";
 
 export const metadata: Metadata = { title: "Edit Game" };
@@ -57,7 +59,7 @@ export default async function AdminGameDetailPage({
           </h1>
           <div className="mt-2"><GameStatusBadge status={game.status} /></div>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           {game.status !== "CANCELLED" && (
             <form action={async () => { "use server"; await postponeGameAction(game.id); }}>
               <Button variant="outline" size="sm">Postpone</Button>
@@ -68,6 +70,22 @@ export default async function AdminGameDetailPage({
               <Button variant="outline" size="sm">Cancel</Button>
             </form>
           )}
+          <ConfirmDeleteButton
+            action={deleteGameAction.bind(null, game.id)}
+            title="Delete game?"
+            description={
+              <>
+                <p>
+                  Railers {game.homeAway === "HOME" ? "vs" : "at"}{" "}
+                  <span className="text-rail-white">{game.opponentName}</span> will be removed for good,
+                  including its final score, quarter scores and all box-score stats.
+                </p>
+                <p>If the game just isn&apos;t happening, use Cancel or Postpone instead.</p>
+              </>
+            }
+            successMessage="Game deleted."
+            redirectTo="/admin/games"
+          />
         </div>
       </div>
 

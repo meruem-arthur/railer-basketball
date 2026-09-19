@@ -34,7 +34,7 @@ export default async function AdminSeasonsPage() {
                   {formatShortDate(s.startDate)} – {formatShortDate(s.endDate)}
                 </p>
               </div>
-              <SeasonRowActions seasonId={s.id} isCurrent={s.isCurrent} isArchived={s.isArchived} />
+              <SeasonRowActions seasonId={s.id} label={s.label} isCurrent={s.isCurrent} isArchived={s.isArchived} />
             </div>
           ))
         )}

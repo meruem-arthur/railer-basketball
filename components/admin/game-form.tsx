@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Label, Input, Select } from "@/components/ui/form-field";
 import { Button } from "@/components/ui/button";
+import { LogoUrlField } from "@/components/admin/logo-url-field";
 import type { GameFormState } from "@/app/admin/(dashboard)/games/actions";
 import type { Game, TeamSeason } from "@prisma/client";
 
@@ -112,10 +113,13 @@ export function GameForm({
         </div>
       </div>
 
-      <div>
-        <Label htmlFor="opponentLogoUrl">Opponent logo URL</Label>
-        <Input id="opponentLogoUrl" name="opponentLogoUrl" type="url" defaultValue={game?.opponentLogoUrl ?? ""} />
-      </div>
+      <LogoUrlField
+        id="opponentLogoUrl"
+        name="opponentLogoUrl"
+        label="Opponent logo"
+        defaultValue={game?.opponentLogoUrl}
+        folder="opponents"
+      />
 
       <SubmitButton label={mode === "create" ? "Create game" : "Save changes"} />
     </form>

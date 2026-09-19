@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { useEffect, useRef } from "react";
 import { Label, Input, Textarea } from "@/components/ui/form-field";
 import { Button } from "@/components/ui/button";
+import { LogoUrlField } from "@/components/admin/logo-url-field";
 import { updateSettingsAction, type SettingsFormState } from "@/app/admin/(dashboard)/settings/actions";
 import type { SiteSetting } from "@prisma/client";
 
@@ -62,10 +63,7 @@ export function SettingsForm({ settings }: { settings: SiteSetting }) {
         <Label htmlFor="venue">Venue</Label>
         <Input id="venue" name="venue" defaultValue={settings.venue ?? ""} />
       </div>
-      <div>
-        <Label htmlFor="logoUrl">Logo URL</Label>
-        <Input id="logoUrl" name="logoUrl" type="url" defaultValue={settings.logoUrl ?? ""} />
-      </div>
+      <LogoUrlField id="logoUrl" name="logoUrl" label="Logo" defaultValue={settings.logoUrl} folder="teams" />
       <SubmitButton />
     </form>
   );

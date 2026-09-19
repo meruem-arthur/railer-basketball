@@ -5,7 +5,8 @@ import { useFormStatus } from "react-dom";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { CheckCircle2 } from "lucide-react";
-import { Label, Input } from "@/components/ui/form-field";
+import { Label } from "@/components/ui/form-field";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Button } from "@/components/ui/button";
 import { resetPasswordAction, type ResetPasswordState } from "@/app/admin/login/actions";
 
@@ -59,14 +60,20 @@ function ResetPasswordForm() {
           )}
           <div>
             <Label htmlFor="password">New password</Label>
-            <Input id="password" name="password" type="password" required minLength={10} />
+            <PasswordInput id="password" name="password" autoComplete="new-password" required minLength={10} />
             <p className="mt-1.5 text-xs text-rail-silver">
               At least 10 characters, one uppercase letter, one number.
             </p>
           </div>
           <div>
             <Label htmlFor="confirmPassword">Confirm new password</Label>
-            <Input id="confirmPassword" name="confirmPassword" type="password" required minLength={10} />
+            <PasswordInput
+              id="confirmPassword"
+              name="confirmPassword"
+              autoComplete="new-password"
+              required
+              minLength={10}
+            />
           </div>
           <SubmitButton />
         </form>

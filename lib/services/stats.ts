@@ -1,4 +1,5 @@
 import "server-only";
+import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
 import { round1, safeDiv } from "@/lib/utils/format";
 
@@ -15,10 +16,17 @@ export interface TeamRecord {
 
 /** Team record and averages for a season, derived entirely from completed games. */
 export async function getTeamRecord(seasonId: string): Promise<TeamRecord> {
-  const completed = await prisma.game.findMany({
-    where: { seasonId, status: "COMPLETED" },
-    select: { railersScore: true, opponentScore: true },
-  });
+  // Independent queries — run them together rather than one after the other.
+  const [completed, teamGameStats] = await Promise.all([
+    prisma.game.findMany({
+      where: { seasonId, status: "COMPLETED" },
+      select: { railersScore: true, opponentScore: true },
+    }),
+    prisma.teamGameStat.findMany({
+      where: { seasonId },
+      select: { rebounds: true, assists: true },
+    }),
+  ]);
 
   const gamesPlayed = completed.length;
   let wins = 0;
@@ -32,11 +40,6 @@ export async function getTeamRecord(seasonId: string): Promise<TeamRecord> {
     pointsAgainst += os;
     if (rs > os) wins += 1;
   }
-
-  const teamGameStats = await prisma.teamGameStat.findMany({
-    where: { seasonId },
-    select: { rebounds: true, assists: true },
-  });
 
   const totalRebounds = teamGameStats.reduce((sum, s) => sum + s.rebounds, 0);
   const totalAssists = teamGameStats.reduce((sum, s) => sum + s.assists, 0);
@@ -151,4 +154,43 @@ export async function getPlayerCareerHistory(playerId: string) {
       apg: round1(safeDiv(assists, gamesPlayed)),
     };
   });
+}
+
+/**
+ * Re-derives the stored team totals for the given games from whatever
+ * player stat rows remain. Call after deleting player stats (e.g. when a
+ * player is deleted) so team rebound/assist averages don't keep counting
+ * numbers that no longer exist.
+ */
+export async function recomputeTeamGameStats(tx: Prisma.TransactionClient, gameIds: string[]) {
+  if (gameIds.length === 0) return;
+
+  const sums = await tx.playerGameStat.groupBy({
+    by: ["gameId"],
+    where: { gameId: { in: gameIds } },
+    _sum: {
+      rebounds: true,
+      assists: true,
+      turnovers: true,
+      fieldGoalsMade: true,
+      fieldGoalsAttempted: true,
+    },
+  });
+  const byGame = new Map(sums.map((row) => [row.gameId, row._sum]));
+
+  await Promise.all(
+    gameIds.map((gameId) => {
+      const sum = byGame.get(gameId);
+      return tx.teamGameStat.updateMany({
+        where: { gameId },
+        data: {
+          rebounds: sum?.rebounds ?? 0,
+          assists: sum?.assists ?? 0,
+          turnovers: sum?.turnovers ?? 0,
+          fieldGoals: sum?.fieldGoalsMade ?? 0,
+          fieldGoalAttempts: sum?.fieldGoalsAttempted ?? 0,
+        },
+      });
+    })
+  );
 }
