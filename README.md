@@ -92,6 +92,9 @@ prisma/
   seed.ts         Demo data (see "Database migrations & seeding")
 ```
 
+## Part of the UMaT SRID SRC family
+A thin bar at the top (and a footer block) links the sister sites: **UMaT SRC**, **SRC Sports** and this site. Addresses default to the production subdomains and can be overridden with `NEXT_PUBLIC_SRC_URL`, `NEXT_PUBLIC_SPORTS_URL`, `NEXT_PUBLIC_RAILERS_URL`. The SRC Sports site links its Basketball card straight to this site.
+
 ## Local setup
 
 **Requirements:** Node.js 20 or later, npm, a Neon account (or any

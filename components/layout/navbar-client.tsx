@@ -8,9 +8,11 @@ import { Menu, X } from "lucide-react";
 export default function NavbarClient({
   links,
   teamName,
+  sites = [],
 }: {
   links: { href: string; label: string }[];
   teamName: string;
+  sites?: { key: string; label: string; href: string }[];
 }) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
@@ -60,6 +62,17 @@ export default function NavbarClient({
             >
               Join the team
             </Link>
+
+            {sites.length > 0 && (
+              <div className="mt-8 border-t border-rail-line pt-5">
+                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-rail-silver">UMaT SRID SRC</p>
+                {sites.map((site) => (
+                  <a key={site.key} href={site.href} className="block py-2 text-base text-rail-silver hover:text-rail-gold">
+                    ← {site.label}
+                  </a>
+                ))}
+              </div>
+            )}
           </nav>
         </div>
       )}

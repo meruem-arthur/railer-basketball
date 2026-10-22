@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getSiteSettings } from "@/lib/services/settings";
 import NavbarClient from "./navbar-client";
+import { OTHER_SITES } from "@/lib/config/network";
 
 const NAV_LINKS = [
   { href: "/team", label: "Team" },
@@ -44,7 +45,7 @@ export default async function Navbar() {
           </Link>
         </div>
 
-        <NavbarClient links={NAV_LINKS} teamName={teamName} />
+        <NavbarClient links={NAV_LINKS} teamName={teamName} sites={OTHER_SITES.map(({ key, label, href }) => ({ key, label, href }))} />
       </div>
     </header>
   );

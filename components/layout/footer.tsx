@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getSiteSettings, getActiveSocialLinks } from "@/lib/services/settings";
 import { SOCIAL_ICONS } from "@/components/icons/social";
+import { OTHER_SITES } from "@/lib/config/network";
 
 const FOOTER_LINKS = [
   { href: "/team", label: "Team" },
@@ -83,7 +84,16 @@ export default async function Footer() {
           </div>
         </div>
 
-        <div className="mt-14 pt-6 border-t border-rail-line flex flex-col sm:flex-row justify-between gap-2 text-xs text-rail-silver">
+        <div className="mt-12 pt-6 border-t border-rail-line flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
+          <p className="text-xs font-semibold uppercase tracking-wide text-rail-silver">Part of UMaT SRID SRC</p>
+          {OTHER_SITES.map((site) => (
+            <a key={site.key} href={site.href} className="text-rail-white/90 hover:text-rail-gold transition-colors">
+              {site.label} ↗
+            </a>
+          ))}
+        </div>
+
+        <div className="mt-6 pt-6 border-t border-rail-line flex flex-col sm:flex-row justify-between gap-2 text-xs text-rail-silver">
           <p>© {new Date().getFullYear()} {settings?.teamName ?? "UMaT SRID Railers"}. All rights reserved.</p>
           <Link href="/admin/login" className="hover:text-rail-white">
             Admin
