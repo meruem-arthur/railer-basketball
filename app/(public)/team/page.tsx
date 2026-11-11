@@ -8,6 +8,8 @@ import { getRosterForSeason } from "@/lib/services/players";
 import { getPlayerSeasonTotals } from "@/lib/services/stats";
 import Link from "next/link";
 import { cn } from "@/lib/utils/cn";
+import { getPageHero } from "@/lib/services/hero";
+import { PageBanner } from "@/components/layout/page-banner";
 
 export const metadata: Metadata = {
   title: "Team",
@@ -34,14 +36,18 @@ export default async function TeamPage({
 }: {
   searchParams: Promise<{ position?: string }>;
 }) {
+  const hero = await getPageHero("team");
   const { position } = await searchParams;
   const season = await getCurrentSeason();
 
   if (!season) {
     return (
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-20">
+      <>
+        <PageBanner hero={hero} title="The Roster" />
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-20">
         <EmptyState icon={Users} title="Roster coming soon" />
-      </div>
+        </div>
+      </>
     );
   }
 
@@ -54,8 +60,10 @@ export default async function TeamPage({
   const filtered = roster.filter((ps) => matchesGroup(ps.position, position));
 
   return (
-    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16">
-      <SectionHeading title="The Roster" subtitle={`${season.label} season`} />
+    <>
+      <PageBanner hero={hero} title="The Roster" subtitle={`${season.label} season`} />
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16">
+      <SectionHeading compact={Boolean(hero?.imageUrl)} title="The Roster" subtitle={`${season.label} season`} />
 
       <div className="flex flex-wrap gap-2 mb-10" role="tablist" aria-label="Filter by position">
         {FILTERS.map((f) => {
@@ -103,6 +111,7 @@ export default async function TeamPage({
           })}
         </div>
       )}
-    </div>
+      </div>
+    </>
   );
 }

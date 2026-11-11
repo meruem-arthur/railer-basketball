@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import Image from "next/image";
+import { ZoomImage } from "@/components/ui/zoom-image";
 import { getPlayerBySlug } from "@/lib/services/players";
 import { getPlayerCareerHistory } from "@/lib/services/stats";
 import { getCurrentSeason } from "@/lib/services/season";
@@ -49,12 +49,11 @@ export default async function PlayerProfilePage({
         <div className="lg:col-span-2">
           <div className="relative aspect-[3/4] bg-rail-navy-light border border-rail-line overflow-hidden">
             {player.photoUrl ? (
-              <Image
+              <ZoomImage
                 src={player.photoUrl}
                 alt={playerFullName(player)}
-                fill
                 sizes="(max-width: 1024px) 100vw, 40vw"
-                className="object-cover"
+                className="absolute inset-0 h-full w-full"
               />
             ) : (
               <div className="flex h-full items-center justify-center font-display text-8xl text-rail-line">

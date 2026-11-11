@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import Image from "next/image";
+import { ZoomImage } from "@/components/ui/zoom-image";
 import DOMPurify from "isomorphic-dompurify";
 import { getArticleBySlug } from "@/lib/services/news";
 import { formatDateTimeLong } from "@/lib/utils/format";
@@ -55,9 +55,13 @@ export default async function NewsArticlePage({
       </div>
 
       {article.featuredImageUrl && (
-        <div className="relative mt-8 aspect-[16/9] overflow-hidden border border-rail-line">
-          <Image src={article.featuredImageUrl} alt="" fill sizes="100vw" className="object-cover" priority />
-        </div>
+        <ZoomImage
+          src={article.featuredImageUrl}
+          alt={article.title}
+          sizes="(max-width: 768px) 100vw, 768px"
+          className="relative mt-8 aspect-[16/9] w-full border border-rail-line"
+          priority
+        />
       )}
 
       <div

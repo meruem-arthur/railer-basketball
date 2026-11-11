@@ -7,6 +7,7 @@ export type CloudinaryFolder =
   | "news"
   | "teams"
   | "opponents"
+  | "heroes"
   | "misc";
 
 const ROOT = "srid-railers";

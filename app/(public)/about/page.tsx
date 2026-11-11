@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { getSiteSettings } from "@/lib/services/settings";
+import { getPageHero } from "@/lib/services/hero";
+import { PageBanner } from "@/components/layout/page-banner";
 
 export const metadata: Metadata = {
   title: "About",
@@ -7,11 +9,14 @@ export const metadata: Metadata = {
 };
 
 export default async function AboutPage() {
+  const hero = await getPageHero("about");
   const settings = await getSiteSettings();
 
   return (
-    <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8 py-16">
-      <p className="text-sm font-semibold uppercase tracking-wide text-rail-gold">About</p>
+    <>
+      <PageBanner hero={hero} title="About" />
+      <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8 py-16">
+      {!hero?.imageUrl && <p className="text-sm font-semibold uppercase tracking-wide text-rail-gold">About</p>}
       <h1 className="mt-3 font-display text-5xl sm:text-6xl tracking-tight text-rail-white text-balance">
         {settings.teamName}
       </h1>
@@ -35,6 +40,7 @@ export default async function AboutPage() {
           </>
         )}
       </div>
-    </div>
+      </div>
+    </>
   );
 }

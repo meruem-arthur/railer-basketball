@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import Image from "next/image";
+import { GalleryLightbox } from "@/components/gallery/gallery-lightbox";
 import Link from "next/link";
 import { PlayCircle } from "lucide-react";
 import { getGameById } from "@/lib/services/games";
@@ -169,13 +169,11 @@ export default async function GameDetailPage({
       {game.galleryAlbums.length > 0 && game.galleryAlbums[0].images.length > 0 && (
         <div className="mt-10">
           <h2 className="font-display text-2xl tracking-tight text-rail-white mb-4">Photos</h2>
-          <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
-            {game.galleryAlbums[0].images.map((img) => (
-              <div key={img.id} className="relative aspect-square overflow-hidden border border-rail-line">
-                <Image src={img.secureUrl} alt={img.altText} fill sizes="16vw" className="object-cover" />
-              </div>
-            ))}
-          </div>
+          <GalleryLightbox
+            images={game.galleryAlbums[0].images}
+            gridClassName="grid grid-cols-3 sm:grid-cols-6 gap-2"
+            sizes="(max-width: 640px) 33vw, 16vw"
+          />
         </div>
       )}
     </div>

@@ -1,6 +1,23 @@
 import { ButtonLink } from "@/components/ui/button";
+import { getHeroSlides } from "@/lib/services/hero";
+import { HeroSlideshow } from "@/components/home/hero-slideshow";
 
-export function Hero() {
+export async function Hero() {
+  const slides = await getHeroSlides();
+  if (slides.length > 0) {
+    return (
+      <HeroSlideshow
+        slides={slides.map((s) => ({
+          id: s.id,
+          heading: s.heading,
+          subheading: s.subheading,
+          imageUrl: s.imageUrl,
+          ctaLabel: s.ctaLabel,
+          ctaHref: s.ctaHref,
+        }))}
+      />
+    );
+  }
   return (
     <section className="relative overflow-hidden border-b border-rail-line">
       {/* Speed-line / track motif, restrained: a handful of angled strokes fading right */}

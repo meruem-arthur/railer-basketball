@@ -520,3 +520,32 @@ model AuditLog {
   @@index([entity])
   @@index([createdAt])
 }
+
+/// Homepage slideshow. Each slide is a photo with optional text/button; with none, the homepage shows the classic typographic hero.
+model HeroSlide {
+  id            String   @id @default(cuid())
+  heading       String?
+  subheading    String?
+  imageUrl      String
+  imagePublicId String?
+  ctaLabel      String?
+  ctaHref       String?
+  displayOrder  Int      @default(0)
+  active        Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([active, displayOrder])
+}
+
+/// Optional banner photo (and title override) for each inner page, keyed by page ("team", "news", ...).
+model PageHero {
+  id            String   @id @default(cuid())
+  pageKey       String   @unique
+  title         String?
+  subtitle      String?
+  imageUrl      String?
+  imagePublicId String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}

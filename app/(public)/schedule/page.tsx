@@ -7,6 +7,8 @@ import { CalendarDays } from "lucide-react";
 import { getCurrentSeason } from "@/lib/services/season";
 import { getSchedule, getDistinctCompetitions } from "@/lib/services/games";
 import { cn } from "@/lib/utils/cn";
+import { getPageHero } from "@/lib/services/hero";
+import { PageBanner } from "@/components/layout/page-banner";
 
 export const metadata: Metadata = {
   title: "Schedule",
@@ -24,6 +26,7 @@ export default async function SchedulePage({
 }: {
   searchParams: Promise<{ status?: string; homeAway?: string; competition?: string }>;
 }) {
+  const hero = await getPageHero("schedule");
   const { status, homeAway, competition } = await searchParams;
   const activeStatus = (status ?? "UPCOMING") as "UPCOMING" | "COMPLETED" | "ALL";
 
@@ -31,9 +34,12 @@ export default async function SchedulePage({
 
   if (!season) {
     return (
-      <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-20">
+      <>
+        <PageBanner hero={hero} title="Schedule" />
+        <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-20">
         <EmptyState icon={CalendarDays} title="No upcoming games" />
-      </div>
+        </div>
+      </>
     );
   }
 
@@ -60,8 +66,10 @@ export default async function SchedulePage({
   };
 
   return (
-    <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-16">
-      <SectionHeading title="Schedule" subtitle={`${season.label} season`} />
+    <>
+      <PageBanner hero={hero} title="Schedule" subtitle={`${season.label} season`} />
+      <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-16">
+      <SectionHeading compact={Boolean(hero?.imageUrl)} title="Schedule" subtitle={`${season.label} season`} />
 
       <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
         <div className="flex gap-2" role="tablist">
@@ -132,6 +140,7 @@ export default async function SchedulePage({
           ))}
         </div>
       )}
-    </div>
+      </div>
+    </>
   );
 }

@@ -5,6 +5,8 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Trophy } from "lucide-react";
 import { getCurrentSeason } from "@/lib/services/season";
 import { getSchedule } from "@/lib/services/games";
+import { getPageHero } from "@/lib/services/hero";
+import { PageBanner } from "@/components/layout/page-banner";
 
 export const metadata: Metadata = {
   title: "Results",
@@ -12,21 +14,27 @@ export const metadata: Metadata = {
 };
 
 export default async function ResultsPage() {
+  const hero = await getPageHero("results");
   const season = await getCurrentSeason();
 
   if (!season) {
     return (
-      <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-20">
+      <>
+        <PageBanner hero={hero} title="Results" />
+        <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-20">
         <EmptyState icon={Trophy} title="No results yet" />
-      </div>
+        </div>
+      </>
     );
   }
 
   const games = await getSchedule({ seasonId: season.id, status: "COMPLETED" });
 
   return (
-    <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-16">
-      <SectionHeading title="Results" subtitle={`${season.label} season`} />
+    <>
+      <PageBanner hero={hero} title="Results" subtitle={`${season.label} season`} />
+      <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-16">
+      <SectionHeading compact={Boolean(hero?.imageUrl)} title="Results" subtitle={`${season.label} season`} />
       {games.length === 0 ? (
         <EmptyState icon={Trophy} title="No results yet" description="Results will appear here after the first game." />
       ) : (
@@ -36,6 +44,7 @@ export default async function ResultsPage() {
           ))}
         </div>
       )}
-    </div>
+      </div>
+    </>
   );
 }

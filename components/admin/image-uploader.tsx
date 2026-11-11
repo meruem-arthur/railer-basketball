@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { Upload, X, Loader2 } from "lucide-react";
 import { uploadAdminImage } from "@/app/admin/upload-actions";
 import type { CloudinaryFolder } from "@/lib/cloudinary/upload";
+import { preparePhotoForUpload, isTooLarge } from "@/lib/utils/prepare-image";
 
 export function ImageUploader({
   folder,
@@ -23,15 +24,20 @@ export function ImageUploader({
   const inputRef = useRef<HTMLInputElement>(null);
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const picked = e.target.files?.[0];
+    if (!picked) return;
 
-    setPreview(URL.createObjectURL(file));
-
-    const formData = new FormData();
-    formData.set("file", file);
+    setPreview(URL.createObjectURL(picked));
 
     startTransition(async () => {
+      // Big phone/camera photos are scaled down first; otherwise the server rejects them.
+      const file = await preparePhotoForUpload(picked);
+      if (isTooLarge(file)) {
+        toast.error("That image is too large. Choose a smaller one.");
+        return;
+      }
+      const formData = new FormData();
+      formData.set("file", file);
       const result = await uploadAdminImage(folder, formData);
       if (!result.success || !result.secureUrl || !result.publicId) {
         toast.error(result.error ?? "Upload failed.");

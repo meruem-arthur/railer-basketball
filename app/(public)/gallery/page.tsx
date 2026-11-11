@@ -6,6 +6,8 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Camera } from "lucide-react";
 import { getAlbums } from "@/lib/services/gallery";
 import { cn } from "@/lib/utils/cn";
+import { getPageHero } from "@/lib/services/hero";
+import { PageBanner } from "@/components/layout/page-banner";
 
 export const metadata: Metadata = {
   title: "Gallery",
@@ -26,12 +28,15 @@ export default async function GalleryPage({
 }: {
   searchParams: Promise<{ category?: string }>;
 }) {
+  const hero = await getPageHero("gallery");
   const { category } = await searchParams;
   const albums = await getAlbums(category);
 
   return (
-    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16">
-      <SectionHeading title="Gallery" />
+    <>
+      <PageBanner hero={hero} title="Gallery" />
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16">
+      <SectionHeading compact={Boolean(hero?.imageUrl)} title="Gallery" />
 
       <div className="flex flex-wrap gap-2 mb-10">
         <Link
@@ -72,6 +77,7 @@ export default async function GalleryPage({
           ))}
         </div>
       )}
-    </div>
+      </div>
+    </>
   );
 }

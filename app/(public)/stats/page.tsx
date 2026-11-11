@@ -7,6 +7,8 @@ import { BarChart3 } from "lucide-react";
 import { getAllSeasons, getCurrentSeason } from "@/lib/services/season";
 import { getTeamRecord, getPlayerSeasonTotals } from "@/lib/services/stats";
 import { cn } from "@/lib/utils/cn";
+import { getPageHero } from "@/lib/services/hero";
+import { PageBanner } from "@/components/layout/page-banner";
 
 export const metadata: Metadata = {
   title: "Statistics",
@@ -18,6 +20,7 @@ export default async function StatsPage({
 }: {
   searchParams: Promise<{ season?: string }>;
 }) {
+  const hero = await getPageHero("stats");
   const { season: seasonParam } = await searchParams;
   const [seasons, currentSeason] = await Promise.all([getAllSeasons(), getCurrentSeason()]);
 
@@ -27,9 +30,12 @@ export default async function StatsPage({
 
   if (!activeSeason) {
     return (
-      <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-20">
+      <>
+        <PageBanner hero={hero} title="Statistics" />
+        <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-20">
         <EmptyState icon={BarChart3} title="Statistics will appear after the first game" />
-      </div>
+        </div>
+      </>
     );
   }
 
@@ -41,8 +47,10 @@ export default async function StatsPage({
   const sortedByPoints = [...players].sort((a, b) => b.ppg - a.ppg);
 
   return (
-    <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-16">
-      <SectionHeading
+    <>
+      <PageBanner hero={hero} title="Statistics" />
+      <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-16">
+      <SectionHeading compact={Boolean(hero?.imageUrl)}
         title="Statistics"
         action={
           seasons.length > 1 ? (
@@ -128,6 +136,7 @@ export default async function StatsPage({
           </div>
         )}
       </div>
-    </div>
+      </div>
+    </>
   );
 }

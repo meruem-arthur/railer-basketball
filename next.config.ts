@@ -1,6 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Admin photo uploads go through Server Actions (the default limit is 1MB). Photos are also scaled down in the browser.
+  experimental: { serverActions: { bodySizeLimit: "4mb" } },
   images: {
     remotePatterns: [
       {

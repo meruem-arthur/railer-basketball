@@ -4,6 +4,7 @@ import { useState, useTransition, useRef } from "react";
 import { toast } from "sonner";
 import { Upload, Loader2 } from "lucide-react";
 import { uploadAdminImage } from "@/app/admin/upload-actions";
+import { preparePhotoForUpload, isTooLarge } from "@/lib/utils/prepare-image";
 import { addImagesToAlbumAction } from "@/app/admin/(dashboard)/gallery/actions";
 
 export function MultiImageUploader({ albumId }: { albumId: string }) {
@@ -19,7 +20,12 @@ export function MultiImageUploader({ albumId }: { albumId: string }) {
       setProgress({ done: 0, total: files.length });
       const uploaded: { cloudinaryPublicId: string; secureUrl: string; width?: number; height?: number; altText: string }[] = [];
 
-      for (const [i, file] of files.entries()) {
+      for (const [i, picked] of files.entries()) {
+        const file = await preparePhotoForUpload(picked);
+        if (isTooLarge(file)) {
+          setProgress({ done: i + 1, total: files.length });
+          continue;
+        }
         const formData = new FormData();
         formData.set("file", file);
         const result = await uploadAdminImage("gallery", formData);

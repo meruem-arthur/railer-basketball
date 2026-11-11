@@ -11,6 +11,8 @@ import {
   BarChart3,
   Newspaper,
   Images,
+  GalleryHorizontal,
+  PanelTop,
   Megaphone,
   ClipboardList,
   UserCog,
@@ -22,12 +24,23 @@ import {
 import { cn } from "@/lib/utils/cn";
 import { signOutAction } from "@/app/admin/actions";
 
-const NAV = [
+type NavItem = {
+  href: string;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+  exact?: boolean;
+  role?: string;
+  roles?: string[];
+};
+
+const NAV: NavItem[] = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
   { href: "/admin/players", label: "Players", icon: Users },
   { href: "/admin/seasons", label: "Seasons", icon: CalendarRange },
   { href: "/admin/games", label: "Games", icon: Trophy },
   { href: "/admin/statistics", label: "Statistics", icon: BarChart3 },
+  { href: "/admin/hero", label: "Hero slides", icon: GalleryHorizontal, roles: ["SUPER_ADMIN", "ADMIN"] },
+  { href: "/admin/banners", label: "Page banners", icon: PanelTop, roles: ["SUPER_ADMIN", "ADMIN"] },
   { href: "/admin/news", label: "News", icon: Newspaper },
   { href: "/admin/gallery", label: "Gallery", icon: Images },
   { href: "/admin/announcements", label: "Announcements", icon: Megaphone },
@@ -42,7 +55,7 @@ export function AdminSidebar({ role }: { role: string }) {
 
   useEffect(() => setOpen(false), [pathname]);
 
-  const items = NAV.filter((item) => !item.role || item.role === role);
+  const items = NAV.filter((item) => (!item.role || item.role === role) && (!item.roles || item.roles.includes(role)));
 
   const content = (
     <nav className="flex flex-col gap-1 p-4">

@@ -22,7 +22,7 @@ one-off project site.
 - [Development](#development)
 - [Production build](#production-build)
 - [Deploying to Vercel](#deploying-to-vercel)
-- [Demo accounts](#demo-accounts)
+- [Accounts and seeding](#accounts-and-seeding)
 - [Architecture notes](#architecture-notes)
 - [Known limitations / next steps](#known-limitations--next-steps)
 
@@ -240,16 +240,24 @@ Because Prisma's connection pooling is configured for Neon's pooled
 connection string (see `lib/db/prisma.ts`), this deploys cleanly to
 Vercel's serverless functions without exhausting Neon's connection limit.
 
-## Demo accounts
+## Accounts and seeding
 
-Created by `prisma/seed.ts`. **Change these passwords immediately if you
-ever seed a production database** — they exist for local/demo use only.
+No passwords are stored in this repository. The seed script reads them from the environment and refuses to run unless you confirm:
 
-| Role | Email | Password |
-|---|---|---|
-| Super Admin | `super.admin@sridrailers.demo` | `RailersDemo2026!` |
-| Admin | `admin@sridrailers.demo` | `RailersDemo2026!` |
-| Editor | `editor@sridrailers.demo` | `RailersDemo2026!` |
+```
+CONFIRM_DEMO_SEED=yes
+SEED_SUPERADMIN_EMAIL=you@example.com
+SEED_SUPERADMIN_PASSWORD=<at least 12 characters>
+# optional demo Admin/Editor accounts:
+SEED_DEMO_USERS=yes
+SEED_DEMO_PASSWORD=<a password you choose>
+```
+
+The seed fills the database with **demo** players, games and news. Do not run it on a live site. To start a live site fresh, keep your Super Admin and use the reset SQL in `docs/sql/`.
+
+## Starting fresh (clearing demo data)
+
+`docs/sql/` has two scripts for Neon's SQL Editor: `01-preview-before-reset.sql` (read-only: lists accounts and row counts) and `02-reset-keep-super-admin.sql` (deletes all content and every non-Super-Admin user, in one transaction, keeping settings and branding). Create a Neon branch first.
 
 ## Architecture notes
 

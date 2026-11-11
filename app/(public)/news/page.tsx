@@ -6,6 +6,8 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Newspaper } from "lucide-react";
 import { getPublishedArticles, getAllCategories } from "@/lib/services/news";
 import { cn } from "@/lib/utils/cn";
+import { getPageHero } from "@/lib/services/hero";
+import { PageBanner } from "@/components/layout/page-banner";
 
 export const metadata: Metadata = {
   title: "News",
@@ -17,6 +19,7 @@ export default async function NewsPage({
 }: {
   searchParams: Promise<{ category?: string }>;
 }) {
+  const hero = await getPageHero("news");
   const { category } = await searchParams;
   const [articles, categories] = await Promise.all([
     getPublishedArticles({ categoryName: category }),
@@ -24,8 +27,10 @@ export default async function NewsPage({
   ]);
 
   return (
-    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16">
-      <SectionHeading title="News" />
+    <>
+      <PageBanner hero={hero} title="News" />
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16">
+      <SectionHeading compact={Boolean(hero?.imageUrl)} title="News" />
 
       <div className="flex flex-wrap gap-2 mb-10">
         <Link
@@ -60,6 +65,7 @@ export default async function NewsPage({
           ))}
         </div>
       )}
-    </div>
+      </div>
+    </>
   );
 }

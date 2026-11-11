@@ -17,46 +17,63 @@ function slugify(...parts: string[]): string {
     .replace(/(^-|-$)/g, "");
 }
 
+/** Passwords and emails come from the environment only. Nothing secret lives in this file. */
+function requiredEnv(name: string): string {
+  const v = process.env[name];
+  if (!v) {
+    console.error(`Missing ${name}. See the "Accounts and seeding" section of the README.`);
+    process.exit(1);
+  }
+  return v;
+}
+
 async function main() {
+  // This script fills the database with DEMO players, games, news and gallery. Never run it by accident on a live site.
+  if (process.env.CONFIRM_DEMO_SEED !== "yes") {
+    console.error("Refusing to seed demo data. Set CONFIRM_DEMO_SEED=yes if you really want demo content in this database.");
+    process.exit(1);
+  }
   console.log("Seeding SRID Railers demo data…");
 
   // ---------------------------------------------------------------
   // Users
   // ---------------------------------------------------------------
-  const passwordHash = await bcrypt.hash("Bond442@love1", 12);
+  const superEmail = requiredEnv("SEED_SUPERADMIN_EMAIL").toLowerCase();
+  const superPassword = requiredEnv("SEED_SUPERADMIN_PASSWORD");
+  if (superPassword.length < 12) {
+    console.error("SEED_SUPERADMIN_PASSWORD must be at least 12 characters.");
+    process.exit(1);
+  }
 
   const superAdmin = await prisma.user.upsert({
-    where: { email: "meruemarthur@gmail.com" },
+    where: { email: superEmail },
     update: {},
     create: {
-      name: "Meruem Arthur",
-      email: "meruemarthur@gmail.com",
-      passwordHash,
+      name: process.env.SEED_SUPERADMIN_NAME || "Super Admin",
+      email: superEmail,
+      passwordHash: await bcrypt.hash(superPassword, 12),
       role: "SUPER_ADMIN",
     },
   });
 
-  const admin = await prisma.user.upsert({
-    where: { email: "admin@sridrailers.demo" },
-    update: {},
-    create: {
-      name: "Ama Boateng",
-      email: "admin@sridrailers.demo",
-      passwordHash,
-      role: "ADMIN",
-    },
-  });
-
-  const editor = await prisma.user.upsert({
-    where: { email: "editor@sridrailers.demo" },
-    update: {},
-    create: {
-      name: "Yaw Mensah",
-      email: "editor@sridrailers.demo",
-      passwordHash,
-      role: "EDITOR",
-    },
-  });
+  // Demo Admin/Editor accounts are only created on request, with a password you provide.
+  // Without them, the Super Admin is credited as the author of demo news.
+  let admin = superAdmin;
+  let editor = superAdmin;
+  const demoUsers = process.env.SEED_DEMO_USERS === "yes";
+  if (demoUsers) {
+    const demoHash = await bcrypt.hash(requiredEnv("SEED_DEMO_PASSWORD"), 12);
+    admin = await prisma.user.upsert({
+      where: { email: "admin@sridrailers.demo" },
+      update: {},
+      create: { name: "Ama Boateng", email: "admin@sridrailers.demo", passwordHash: demoHash, role: "ADMIN" },
+    });
+    editor = await prisma.user.upsert({
+      where: { email: "editor@sridrailers.demo" },
+      update: {},
+      create: { name: "Yaw Mensah", email: "editor@sridrailers.demo", passwordHash: demoHash, role: "EDITOR" },
+    });
+  }
 
   // ---------------------------------------------------------------
   // Site settings + social links
@@ -469,10 +486,8 @@ async function main() {
   }
 
   console.log("Seed complete.");
-  console.log("Demo admin credentials (change immediately in production):");
-  console.log(`  Super Admin: ${superAdmin.email} / RailersDemo2026!`);
-  console.log(`  Admin:       ${admin.email} / RailersDemo2026!`);
-  console.log(`  Editor:      ${editor.email} / RailersDemo2026!`);
+  console.log(`Super Admin: ${superAdmin.email} (password from SEED_SUPERADMIN_PASSWORD)`);
+  if (demoUsers) console.log(`Demo accounts: ${admin.email}, ${editor.email}`);
 }
 
 main()

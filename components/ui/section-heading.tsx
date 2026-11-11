@@ -6,13 +6,17 @@ export function SectionHeading({
   align = "left",
   action,
   className,
+  compact = false,
 }: {
   title: string;
   subtitle?: string;
   align?: "left" | "center";
   action?: React.ReactNode;
   className?: string;
+  /** When a page banner already shows the title, render only the action (if any). */
+  compact?: boolean;
 }) {
+  if (compact) return action ? <div className="mb-10 flex justify-end">{action}</div> : null;
   return (
     <div
       className={cn(
