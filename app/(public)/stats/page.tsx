@@ -7,6 +7,7 @@ import { BarChart3 } from "lucide-react";
 import { getAllSeasons, getCurrentSeason } from "@/lib/services/season";
 import { getTeamRecord, getPlayerSeasonTotals } from "@/lib/services/stats";
 import { cn } from "@/lib/utils/cn";
+import { jerseyLabel } from "@/lib/utils/format";
 import { getPageHero } from "@/lib/services/hero";
 import { PageBanner } from "@/components/layout/page-banner";
 
@@ -118,7 +119,7 @@ export default async function StatsPage({
                   <tr key={p.playerSeasonId} className="border-b border-rail-line/60">
                     <td className="py-3 px-4">
                       <Link href={`/team/${p.slug}`} className="text-rail-white hover:text-rail-gold">
-                        #{p.jerseyNumber} {p.firstName} {p.lastName}
+                        {jerseyLabel(p.jerseyNumber)}{p.firstName} {p.lastName}
                       </Link>
                     </td>
                     <td className="py-3 px-4 text-center tabular-nums">{p.gamesPlayed}</td>

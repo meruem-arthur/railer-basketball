@@ -1,11 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Upload, UserPlus } from "lucide-react";
+import { Pencil, Upload, UserPlus } from "lucide-react";
 import { prisma } from "@/lib/db/prisma";
 import { DataTable, type Column } from "@/components/ui/data-table";
 import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
 import { positionShort } from "@/lib/utils/format";
+import { requireRole } from "@/lib/auth/session";
+import { ConfirmDeleteButton } from "@/components/admin/confirm-delete-button";
+import { deleteAllPlayersAction, deletePlayerAction } from "@/app/admin/(dashboard)/players/actions";
 import type { Player } from "@prisma/client";
 
 export const metadata: Metadata = { title: "Players" };
@@ -15,6 +18,7 @@ export default async function AdminPlayersPage({
 }: {
   searchParams: Promise<{ q?: string }>;
 }) {
+  await requireRole(["SUPER_ADMIN", "ADMIN"]);
   const { q } = await searchParams;
 
   const players = await prisma.player.findMany({
@@ -32,7 +36,7 @@ export default async function AdminPlayersPage({
     orderBy: [{ active: "desc" }, { lastName: "asc" }],
   });
 
-  const columns: Column<Player & { seasons: { jerseyNumber: number; position: string }[] }>[] = [
+  const columns: Column<Player & { seasons: { jerseyNumber: number | null; position: string }[] }>[] = [
     {
       key: "name",
       header: "Player",
@@ -45,7 +49,7 @@ export default async function AdminPlayersPage({
     {
       key: "jersey",
       header: "Jersey",
-      render: (p) => (p.seasons[0] ? `#${p.seasons[0].jerseyNumber}` : "—"),
+      render: (p) => (p.seasons[0]?.jerseyNumber != null ? `#${p.seasons[0].jerseyNumber}` : "—"),
     },
     {
       key: "position",
@@ -53,9 +57,36 @@ export default async function AdminPlayersPage({
       render: (p) => (p.seasons[0] ? positionShort(p.seasons[0].position) : "—"),
     },
     {
+      key: "programme",
+      header: "Programme",
+      hideOnMobile: true,
+      render: (p) => [p.programme, p.academicLevel ? p.academicLevel.replace("LEVEL_", "") : null].filter(Boolean).join(" ") || "—",
+    },
+    {
       key: "status",
       header: "Status",
       render: (p) => <Badge tone={p.active ? "win" : "neutral"}>{p.active ? "Active" : "Inactive"}</Badge>,
+    },
+    {
+      key: "actions",
+      header: "Actions",
+      render: (p) => (
+        <div className="flex items-center gap-2">
+          <ButtonLink href={`/admin/players/${p.id}`} variant="outline" size="sm">
+            <Pencil className="h-4 w-4" aria-hidden="true" /> Edit
+          </ButtonLink>
+          <ConfirmDeleteButton
+            action={deletePlayerAction.bind(null, p.id)}
+            title="Delete player?"
+            description={
+              <p>
+                <span className="text-rail-white">{p.firstName} {p.lastName}</span> will be removed for good, along with their season entries and any box-score lines.
+              </p>
+            }
+            successMessage="Player deleted."
+          />
+        </div>
+      ),
     },
   ];
 
@@ -70,6 +101,24 @@ export default async function AdminPlayersPage({
           <ButtonLink href="/admin/players/new">
             <UserPlus className="h-4 w-4" /> Add Player
           </ButtonLink>
+          {players.length > 0 && (
+            <ConfirmDeleteButton
+              action={deleteAllPlayersAction}
+              title="Delete ALL players?"
+              description={
+                <>
+                  <p>
+                    This removes all <span className="text-rail-white">{players.length}</span> players, with their season entries and every box-score line recorded for them.
+                  </p>
+                  <p>Games and results stay, but player statistics are lost.</p>
+                </>
+              }
+              confirmText="DELETE ALL"
+              successMessage="All players deleted."
+              triggerLabel="Delete all"
+              size="md"
+            />
+          )}
         </div>
       </div>
 

@@ -5,11 +5,12 @@ import { useFormStatus } from "react-dom";
 import { toast } from "sonner";
 import { Label, Input, Textarea, Select } from "@/components/ui/form-field";
 import { Button } from "@/components/ui/button";
+import { jerseyLabel } from "@/lib/utils/format";
 import { submitResultAction, type ResultFormState } from "@/app/admin/(dashboard)/games/actions";
 
 interface RosterOption {
   id: string; // playerSeasonId
-  jerseyNumber: number;
+  jerseyNumber: number | null;
   name: string;
 }
 
@@ -265,7 +266,7 @@ export function ResultEntryForm({
                     className="accent-rail-gold"
                   />
                   <span className="text-sm font-medium text-rail-white">
-                    #{p.jerseyNumber} {p.name}
+                    {jerseyLabel(p.jerseyNumber)}{p.name}
                   </span>
                 </label>
                 {isActive && (
@@ -300,7 +301,7 @@ export function ResultEntryForm({
             .filter((p) => activePlayers.has(p.id))
             .map((p) => (
               <option key={p.id} value={p.id}>
-                #{p.jerseyNumber} {p.name}
+                {jerseyLabel(p.jerseyNumber)}{p.name}
               </option>
             ))}
         </Select>

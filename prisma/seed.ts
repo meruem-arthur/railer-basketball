@@ -170,19 +170,22 @@ async function main() {
       },
     });
 
-    const ps = await prisma.playerSeason.upsert({
-      where: { seasonId_jerseyNumber: { seasonId: currentSeason.id, jerseyNumber: p.jersey } },
-      update: {},
-      create: {
-        playerId: player.id,
-        seasonId: currentSeason.id,
-        jerseyNumber: p.jersey,
-        position: p.position,
-        active: true,
-      },
+    const existingPs = await prisma.playerSeason.findFirst({
+      where: { seasonId: currentSeason.id, jerseyNumber: p.jersey },
     });
+    const ps =
+      existingPs ??
+      (await prisma.playerSeason.create({
+        data: {
+          playerId: player.id,
+          seasonId: currentSeason.id,
+          jerseyNumber: p.jersey,
+          position: p.position,
+          active: true,
+        },
+      }));
 
-    playerSeasons.push({ id: ps.id, jerseyNumber: ps.jerseyNumber, firstName: p.firstName, lastName: p.lastName });
+    playerSeasons.push({ id: ps.id, jerseyNumber: p.jersey, firstName: p.firstName, lastName: p.lastName });
   }
 
   // ---------------------------------------------------------------

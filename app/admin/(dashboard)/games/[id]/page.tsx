@@ -39,7 +39,7 @@ export default async function AdminGameDetailPage({
   const roster = await prisma.playerSeason.findMany({
     where: { seasonId: game.seasonId },
     include: { player: true },
-    orderBy: { jerseyNumber: "asc" },
+    orderBy: [{ jerseyNumber: "asc" }, { player: { lastName: "asc" } }],
   });
 
   const rosterOptions = roster.map((r) => ({

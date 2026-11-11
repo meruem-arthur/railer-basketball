@@ -3,6 +3,7 @@ import { StatCard } from "@/components/ui/stat-card";
 import { SeasonSelect } from "@/components/admin/season-select";
 import { getAllSeasons, getCurrentSeason } from "@/lib/services/season";
 import { getTeamRecord, getPlayerSeasonTotals } from "@/lib/services/stats";
+import { jerseyLabel } from "@/lib/utils/format";
 
 export const metadata: Metadata = { title: "Statistics" };
 
@@ -66,7 +67,7 @@ export default async function AdminStatisticsPage({
                 .sort((a, b) => b.ppg - a.ppg)
                 .map((p) => (
                   <tr key={p.playerSeasonId} className="border-b border-rail-line/60">
-                    <td className="py-3 px-4 text-rail-white">#{p.jerseyNumber} {p.firstName} {p.lastName}</td>
+                    <td className="py-3 px-4 text-rail-white">{jerseyLabel(p.jerseyNumber)}{p.firstName} {p.lastName}</td>
                     <td className="py-3 px-4 text-center tabular-nums">{p.gamesPlayed}</td>
                     <td className="py-3 px-4 text-center tabular-nums text-rail-gold font-semibold">{p.ppg}</td>
                     <td className="py-3 px-4 text-center tabular-nums">{p.rpg}</td>

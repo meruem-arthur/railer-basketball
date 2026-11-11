@@ -106,22 +106,32 @@ export async function importPlayersCsvAction(_prev: ImportState, formData: FormD
         created++;
       }
 
-      // Season entry needs both a jersey number and a position.
+      // Roster entry needs a position; the jersey number is optional.
       const position = rec.position ? parsePosition(rec.position) : null;
       if (rec.position && !position) notes.push(`Row ${line}: position "${rec.position}" not recognised.`);
-      const jersey = rec.jersey ? Number(rec.jersey) : null;
-      if (season && position && jersey !== null && Number.isInteger(jersey) && jersey >= 0 && jersey <= 99) {
+      let jersey: number | null = null;
+      if (rec.jersey) {
+        const n = Number(rec.jersey);
+        if (Number.isInteger(n) && n >= 0 && n <= 99) jersey = n;
+        else notes.push(`Row ${line}: jersey "${rec.jersey}" is not a number from 0 to 99, left blank.`);
+      }
+      if (season && position) {
         const has = await prisma.playerSeason.findUnique({ where: { playerId_seasonId: { playerId, seasonId: season.id } } });
-        if (!has) {
-          try {
+        try {
+          if (!has) {
             await prisma.playerSeason.create({ data: { playerId, seasonId: season.id, jerseyNumber: jersey, position } });
             assigned++;
-          } catch {
-            notes.push(`Row ${line}: jersey #${jersey} is already taken in ${season.label}.`);
+          } else {
+            await prisma.playerSeason.update({
+              where: { id: has.id },
+              data: { position, ...(jersey !== null ? { jerseyNumber: jersey } : {}) },
+            });
           }
+        } catch {
+          notes.push(`Row ${line}: jersey #${jersey} is already taken in ${season.label}.`);
         }
-      } else if (position && season && jersey === null) {
-        notes.push(`Row ${line}: ${p.firstName} ${p.lastName} has a position but no jersey number yet, so not added to ${season.label}.`);
+      } else if (position && !season && i === 0) {
+        notes.push("No season was chosen, so positions were not saved. Pick a season and import again to put players on the roster.");
       }
     } catch {
       notes.push(`Row ${line} skipped: could not save ${p.firstName} ${p.lastName}.`);

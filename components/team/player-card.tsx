@@ -6,7 +6,7 @@ interface PlayerCardProps {
   slug: string;
   firstName: string;
   lastName: string;
-  jerseyNumber: number;
+  jerseyNumber?: number | null;
   position: string;
   photoUrl?: string | null;
   ppg?: number;
@@ -43,13 +43,15 @@ export function PlayerCard({
           />
         ) : (
           <div className="flex h-full items-center justify-center font-display text-6xl text-rail-line">
-            {jerseyNumber}
+            {jerseyNumber ?? `${firstName[0] ?? ""}${lastName[0] ?? ""}`.toUpperCase()}
           </div>
         )}
         <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-rail-bg to-transparent" />
-        <span className="absolute top-3 left-3 font-display text-3xl text-rail-gold drop-shadow-md">
-          #{jerseyNumber}
-        </span>
+        {jerseyNumber != null && (
+          <span className="absolute top-3 left-3 font-display text-3xl text-rail-gold drop-shadow-md">
+            #{jerseyNumber}
+          </span>
+        )}
 
         {hasStats && (
           <div className="absolute inset-0 flex items-end justify-center gap-4 bg-rail-bg/85 opacity-0 transition-opacity duration-300 group-hover:opacity-100 pb-6">

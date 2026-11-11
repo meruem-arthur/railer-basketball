@@ -3,7 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db/prisma";
 import { requireRole } from "@/lib/auth/session";
-import { playerSchema, playerSeasonSchema } from "@/lib/validation/player";
+import { z } from "zod";
+import { playerSchema, playerSeasonSchema, positionEnum } from "@/lib/validation/player";
 import { logAction } from "@/lib/services/audit";
 import { slugify, slugExists } from "@/lib/services/players";
 import { recomputeTeamGameStats } from "@/lib/services/stats";
@@ -63,10 +64,10 @@ export async function createPlayerAction(
 
   // Optional immediate season assignment from the same form.
   const seasonId = String(raw.seasonId || "");
-  const jerseyNumber = raw.jerseyNumber ? Number(raw.jerseyNumber) : null;
+  const jerseyNumber = raw.jerseyNumber ? Number(raw.jerseyNumber) : undefined;
   const position = String(raw.position || "");
 
-  if (seasonId && jerseyNumber !== null && position) {
+  if (seasonId && position) {
     const seasonParsed = playerSeasonSchema.safeParse({
       playerId: player.id,
       seasonId,
@@ -234,7 +235,7 @@ export async function assignPlayerSeasonAction(
   const parsed = playerSeasonSchema.safeParse({
     playerId: formData.get("playerId"),
     seasonId: formData.get("seasonId"),
-    jerseyNumber: formData.get("jerseyNumber"),
+    jerseyNumber: formData.get("jerseyNumber") || undefined,
     position: formData.get("position"),
     active: true,
   });
@@ -246,7 +247,7 @@ export async function assignPlayerSeasonAction(
   try {
     await prisma.playerSeason.create({ data: parsed.data });
   } catch {
-    return { success: false, error: "This player already has a season entry, or the jersey number is taken." };
+    return { success: false, error: "This player already has an entry for that season, or that jersey number is taken." };
   }
 
   await logAction({
@@ -277,4 +278,81 @@ export async function removePlayerSeasonAction(playerSeasonId: string, playerId:
     entityId: playerSeasonId,
   });
   revalidatePath(`/admin/players/${playerId}`);
+}
+
+const updateSeasonEntrySchema = z.object({
+  playerSeasonId: z.string().min(1),
+  playerId: z.string().min(1),
+  position: positionEnum,
+  jerseyNumber: z.coerce.number().int().min(0).max(99).optional().nullable(),
+});
+
+/** Changes the position and/or jersey number of one season roster entry. Leave jersey blank for none. */
+export async function updatePlayerSeasonAction(
+  _prev: AssignSeasonState,
+  formData: FormData
+): Promise<AssignSeasonState> {
+  const user = await requireRole(["SUPER_ADMIN", "ADMIN"]);
+
+  const parsed = updateSeasonEntrySchema.safeParse({
+    playerSeasonId: formData.get("playerSeasonId"),
+    playerId: formData.get("playerId"),
+    position: formData.get("position"),
+    jerseyNumber: formData.get("jerseyNumber") || null,
+  });
+  if (!parsed.success) {
+    return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid input." };
+  }
+
+  try {
+    await prisma.playerSeason.update({
+      where: { id: parsed.data.playerSeasonId },
+      data: { position: parsed.data.position, jerseyNumber: parsed.data.jerseyNumber ?? null },
+    });
+  } catch {
+    return { success: false, error: "Could not save. That jersey number may already be taken this season." };
+  }
+
+  await logAction({ userId: user.id, action: "PLAYER_SEASON_UPDATED", entity: "PlayerSeason", entityId: parsed.data.playerSeasonId });
+  revalidatePath(`/admin/players/${parsed.data.playerId}`);
+  revalidatePath("/admin/players");
+  revalidatePath("/team");
+  return { success: true };
+}
+
+/** Permanently deletes EVERY player, with their season entries and box-score lines. */
+export async function deleteAllPlayersAction(): Promise<DeleteResult> {
+  const user = await requireRole(["SUPER_ADMIN", "ADMIN"]);
+
+  const players = await prisma.player.findMany({
+    select: { photoPublicId: true, seasons: { select: { gameStats: { select: { gameId: true } } } } },
+  });
+  if (players.length === 0) return { success: false, error: "There are no players to delete." };
+
+  const affectedGameIds = [...new Set(players.flatMap((p) => p.seasons.flatMap((ps) => ps.gameStats.map((gs) => gs.gameId))))];
+
+  try {
+    await prisma.$transaction(
+      async (tx) => {
+        await tx.game.updateMany({ where: { mvpPlayerSeasonId: { not: null } }, data: { mvpPlayerSeasonId: null } });
+        await tx.player.deleteMany({});
+        await recomputeTeamGameStats(tx, affectedGameIds);
+      },
+      { timeout: 30_000 }
+    );
+  } catch {
+    return { success: false, error: "Could not delete the players. Please try again." };
+  }
+
+  for (const p of players) {
+    if (p.photoPublicId) await deleteImage(p.photoPublicId).catch(() => {});
+  }
+
+  await logAction({ userId: user.id, action: "PLAYERS_DELETED_ALL", entity: "Player", metadata: { count: players.length } });
+  revalidatePath("/admin/players");
+  revalidatePath("/team");
+  revalidatePath("/stats");
+  revalidatePath("/results");
+  revalidatePath("/");
+  return { success: true };
 }

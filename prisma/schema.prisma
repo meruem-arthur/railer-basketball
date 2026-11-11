@@ -203,7 +203,7 @@ model PlayerSeason {
   player       Player         @relation(fields: [playerId], references: [id], onDelete: Cascade)
   seasonId     String
   season       TeamSeason     @relation(fields: [seasonId], references: [id], onDelete: Cascade)
-  jerseyNumber Int
+  jerseyNumber Int?
   position     PlayerPosition
   active       Boolean        @default(true)
   createdAt    DateTime       @default(now())

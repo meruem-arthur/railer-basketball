@@ -8,6 +8,7 @@ import { StatCard } from "@/components/ui/stat-card";
 import {
   academicLevelLabel,
   heightDisplay,
+  initials,
   playerFullName,
   positionLabel,
 } from "@/lib/utils/format";
@@ -57,14 +58,14 @@ export default async function PlayerProfilePage({
               />
             ) : (
               <div className="flex h-full items-center justify-center font-display text-8xl text-rail-line">
-                {currentPlayerSeason?.jerseyNumber ?? ""}
+                {currentPlayerSeason?.jerseyNumber ?? initials(player)}
               </div>
             )}
           </div>
         </div>
 
         <div className="lg:col-span-3">
-          {currentPlayerSeason && (
+          {currentPlayerSeason && currentPlayerSeason.jerseyNumber != null && (
             <p className="font-display text-2xl text-rail-gold">#{currentPlayerSeason.jerseyNumber}</p>
           )}
           <h1 className="font-display text-5xl sm:text-6xl tracking-tight text-rail-white text-balance">
@@ -149,7 +150,7 @@ export default async function PlayerProfilePage({
                 {history.map((h) => (
                   <tr key={h.seasonId} className="border-b border-rail-line/60">
                     <td className="py-3 px-4 font-medium text-rail-white">{h.seasonLabel}</td>
-                    <td className="py-3 px-4 text-rail-silver">#{h.jerseyNumber}</td>
+                    <td className="py-3 px-4 text-rail-silver">{h.jerseyNumber != null ? `#${h.jerseyNumber}` : "—"}</td>
                     <td className="py-3 px-4 text-rail-silver">{h.gamesPlayed}</td>
                     <td className="py-3 px-4 text-rail-gold font-semibold">{h.ppg}</td>
                     <td className="py-3 px-4 text-rail-silver">{h.rpg}</td>

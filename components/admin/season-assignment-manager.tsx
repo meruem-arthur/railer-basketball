@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useTransition } from "react";
+import { useActionState, useEffect, useTransition } from "react";
 import { useFormStatus } from "react-dom";
 import { toast } from "sonner";
 import { Trash2 } from "lucide-react";
@@ -10,6 +10,7 @@ import { positionLabel } from "@/lib/utils/format";
 import {
   assignPlayerSeasonAction,
   removePlayerSeasonAction,
+  updatePlayerSeasonAction,
   type AssignSeasonState,
 } from "@/app/admin/(dashboard)/players/actions";
 import type { TeamSeason } from "@prisma/client";
@@ -24,10 +25,37 @@ const POSITIONS = [
 
 interface ExistingAssignment {
   id: string;
-  jerseyNumber: number;
+  jerseyNumber: number | null;
   position: string;
   active: boolean;
   season: { id: string; label: string };
+}
+
+function EditEntry({ playerId, a }: { playerId: string; a: ExistingAssignment }) {
+  const [state, formAction] = useActionState(updatePlayerSeasonAction, { success: false } as AssignSeasonState);
+  useEffect(() => {
+    if (state.success) toast.success("Saved.");
+  }, [state]);
+  return (
+    <form action={formAction} className="flex flex-wrap items-end gap-3">
+      <input type="hidden" name="playerSeasonId" value={a.id} />
+      <input type="hidden" name="playerId" value={playerId} />
+      <div>
+        <Label htmlFor={`pos-${a.id}`}>Position</Label>
+        <Select id={`pos-${a.id}`} name="position" defaultValue={a.position} className="w-44">
+          {POSITIONS.map((p) => (
+            <option key={p.value} value={p.value}>{p.label}</option>
+          ))}
+        </Select>
+      </div>
+      <div>
+        <Label htmlFor={`jer-${a.id}`}>Jersey # (optional)</Label>
+        <Input id={`jer-${a.id}`} name="jerseyNumber" type="number" min={0} max={99} defaultValue={a.jerseyNumber ?? ""} className="w-24" />
+      </div>
+      <Button type="submit" size="sm" variant="outline">Save</Button>
+      {state.error && <p className="w-full text-sm text-rail-loss">{state.error}</p>}
+    </form>
+  );
 }
 
 function SubmitButton() {
@@ -72,12 +100,15 @@ export function SeasonAssignmentManager({
       {assignments.length > 0 && (
         <div className="border border-rail-line divide-y divide-rail-line mb-6">
           {assignments.map((a) => (
-            <div key={a.id} className="flex items-center justify-between px-4 py-3 text-sm">
-              <div>
-                <span className="text-rail-white font-medium">{a.season.label}</span>
-                <span className="text-rail-silver ml-3">
-                  #{a.jerseyNumber} · {positionLabel(a.position)}
-                </span>
+            <div key={a.id} className="flex flex-wrap items-end justify-between gap-3 px-4 py-3 text-sm">
+              <div className="space-y-3">
+                <div>
+                  <span className="text-rail-white font-medium">{a.season.label}</span>
+                  <span className="text-rail-silver ml-3">
+                    {a.jerseyNumber != null ? `#${a.jerseyNumber} · ` : ""}{positionLabel(a.position)}
+                  </span>
+                </div>
+                <EditEntry playerId={playerId} a={a} />
               </div>
               <button
                 onClick={() => handleRemove(a.id)}
@@ -106,7 +137,7 @@ export function SeasonAssignmentManager({
             </Select>
           </div>
           <div>
-            <Label htmlFor="assign-jersey">Jersey #</Label>
+            <Label htmlFor="assign-jersey">Jersey # (optional)</Label>
             <Input id="assign-jersey" name="jerseyNumber" type="number" min={0} max={99} className="w-24" />
           </div>
           <div>

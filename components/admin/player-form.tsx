@@ -166,7 +166,7 @@ export function PlayerForm({
               </Select>
             </div>
             <div>
-              <Label htmlFor="jerseyNumber">Jersey #</Label>
+              <Label htmlFor="jerseyNumber">Jersey # (optional)</Label>
               <Input id="jerseyNumber" name="jerseyNumber" type="number" min={0} max={99} />
             </div>
             <div>

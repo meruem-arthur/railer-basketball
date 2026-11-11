@@ -32,7 +32,7 @@ export function PlayerImportForm({ seasons }: { seasons: { id: string; label: st
             {seasons.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}
           </Select>
           <p className="mt-2 text-xs text-rail-silver">
-            A player is only added to the season roster when their row has both a position and a jersey number.
+            A player is added to the season roster when their row has a position. Jersey numbers are optional.
           </p>
         </div>
 

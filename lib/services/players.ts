@@ -9,7 +9,7 @@ export async function getRosterForSeason(seasonId: string, position?: string) {
       ...(position ? { position: position as never } : {}),
     },
     include: { player: true },
-    orderBy: { jerseyNumber: "asc" },
+    orderBy: [{ jerseyNumber: "asc" }, { player: { lastName: "asc" } }],
   });
 }
 
@@ -29,7 +29,7 @@ export async function getFeaturedPlayers(seasonId: string, take = 4) {
   return prisma.playerSeason.findMany({
     where: { seasonId, active: true },
     include: { player: true },
-    orderBy: { jerseyNumber: "asc" },
+    orderBy: [{ jerseyNumber: "asc" }, { player: { lastName: "asc" } }],
     take,
   });
 }

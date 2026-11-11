@@ -34,7 +34,7 @@ export const playerSchema = z.object({
 export const playerSeasonSchema = z.object({
   playerId: z.string().min(1),
   seasonId: z.string().min(1),
-  jerseyNumber: z.coerce.number().int().min(0).max(99),
+  jerseyNumber: z.coerce.number().int().min(0).max(99).optional().nullable(),
   position: positionEnum,
   active: z.boolean().default(true),
 });

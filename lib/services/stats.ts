@@ -63,7 +63,7 @@ export interface PlayerSeasonTotals {
   lastName: string;
   slug: string;
   photoUrl: string | null;
-  jerseyNumber: number;
+  jerseyNumber: number | null;
   gamesPlayed: number;
   points: number;
   rebounds: number;

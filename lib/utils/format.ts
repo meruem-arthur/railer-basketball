@@ -80,3 +80,8 @@ export function round1(n: number): number {
 export function safeDiv(numerator: number, denominator: number): number {
   return denominator > 0 ? numerator / denominator : 0;
 }
+
+/** "#12 " when a jersey number exists, otherwise an empty string (jersey numbers are optional). */
+export function jerseyLabel(n: number | null | undefined): string {
+  return n == null ? "" : `#${n} `;
+}
