@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { UserPlus } from "lucide-react";
+import { Upload, UserPlus } from "lucide-react";
 import { prisma } from "@/lib/db/prisma";
 import { DataTable, type Column } from "@/components/ui/data-table";
 import { Badge } from "@/components/ui/badge";
@@ -63,9 +63,14 @@ export default async function AdminPlayersPage({
     <div>
       <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
         <h1 className="font-display text-4xl tracking-tight text-rail-white">Players</h1>
-        <ButtonLink href="/admin/players/new">
-          <UserPlus className="h-4 w-4" /> Add Player
-        </ButtonLink>
+        <div className="flex flex-wrap gap-3">
+          <ButtonLink href="/admin/players/import" variant="secondary">
+            <Upload className="h-4 w-4" /> Import CSV
+          </ButtonLink>
+          <ButtonLink href="/admin/players/new">
+            <UserPlus className="h-4 w-4" /> Add Player
+          </ButtonLink>
+        </div>
       </div>
 
       <form className="mb-6 max-w-sm">
