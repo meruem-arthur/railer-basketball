@@ -41,6 +41,12 @@ export const authConfigEdge: NextAuthConfig = {
         return true;
       }
 
+      // Password recovery pages must be reachable while signed out.
+      const isPublicAdminPage =
+        request.nextUrl.pathname === "/admin/forgot-password" ||
+        request.nextUrl.pathname === "/admin/reset-password";
+      if (isPublicAdminPage) return true;
+
       if (isOnAdmin) {
         return isLoggedIn;
       }
